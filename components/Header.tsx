@@ -1,0 +1,56 @@
+
+import React from 'react';
+
+interface HeaderProps {
+  onHelpClick: () => void;
+}
+
+const LogoIcon: React.FC = () => (
+  <svg
+    width="32"
+    height="32"
+    viewBox="0 0 24 24"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    className="text-brand-primary"
+  >
+    <path
+      d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+const HelpIcon: React.FC = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <circle cx="12" cy="12" r="10"></circle>
+    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+    <line x1="12" y1="17" x2="12.01" y2="17"></line>
+  </svg>
+);
+
+
+export const Header: React.FC<HeaderProps> = ({ onHelpClick }) => {
+  return (
+    <header className="bg-light-bg/50 backdrop-blur-sm sticky top-0 z-10">
+      <div className="container mx-auto px-4">
+        <div className="flex justify-between items-center py-4 border-b border-light-border">
+          <div className="flex items-center space-x-2">
+            <LogoIcon />
+            <span className="font-bold text-xl text-text-primary">Web Check AI</span>
+          </div>
+          <button
+            onClick={onHelpClick}
+            className="text-text-secondary hover:text-text-primary transition-colors duration-300"
+            aria-label="Open help modal"
+          >
+            <HelpIcon />
+          </button>
+        </div>
+      </div>
+    </header>
+  );
+};

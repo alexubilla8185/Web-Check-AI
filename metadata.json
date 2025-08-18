@@ -1,0 +1,5 @@
+{
+  "name": "Web Check AI",
+  "description": "An AI-powered tool to run automated QA checks and generate low-code test plans for any website, API, or application.",
+  "requestFramePermissions": []
+}
