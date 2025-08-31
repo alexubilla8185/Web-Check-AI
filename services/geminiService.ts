@@ -3,12 +3,39 @@ import { GoogleGenAI, Type } from "@google/genai";
 import type { QAResults, TestRunResult, TestSuite, TestStep } from '../types';
 import { Status, TestAction } from '../types';
 
-// Assume process.env.API_KEY is available in the environment
-const API_KEY = process.env.API_KEY as string;
-if (!API_KEY) {
-    console.warn("API_KEY environment variable not set. Using a placeholder. This will likely fail.");
+const API_KEY_STORAGE_KEY = 'web-check-ai-gemini-api-key';
+let ai: GoogleGenAI | null = null;
+
+// Function to get the initialized AI client
+function getAiClient(): GoogleGenAI {
+  const apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
+  if (!apiKey) {
+    throw new Error('Google Gemini API key not found. Please set your key using the key icon in the header.');
+  }
+  
+  // Initialize if it doesn't exist or if the key was updated.
+  if (!ai) {
+    ai = new GoogleGenAI({ apiKey });
+  }
+  return ai;
 }
-const ai = new GoogleGenAI({ apiKey: API_KEY });
+
+// --- API Key Management ---
+export const saveApiKey = (key: string) => {
+  localStorage.setItem(API_KEY_STORAGE_KEY, key);
+  // Reset the client so it's re-initialized with the new key on the next API call
+  ai = null; 
+};
+
+export const getApiKey = (): string | null => {
+  return localStorage.getItem(API_KEY_STORAGE_KEY);
+}
+
+export const clearApiKey = () => {
+  localStorage.removeItem(API_KEY_STORAGE_KEY);
+  ai = null;
+}
+
 
 const checkItemSchema = {
     type: Type.OBJECT,
@@ -73,6 +100,7 @@ export const analyzeWebsite = async (url: string): Promise<QAResults> => {
     `;
 
     try {
+        const ai = getAiClient();
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: prompt,
@@ -92,7 +120,10 @@ export const analyzeWebsite = async (url: string): Promise<QAResults> => {
         return parsedResults;
     } catch (error) {
         console.error("Error calling Gemini API:", error);
-        throw new Error("Failed to get analysis from AI. The model may have returned an invalid response.");
+        if (error instanceof Error) {
+            throw new Error(`Failed to get analysis from AI. ${error.message}`);
+        }
+        throw new Error("Failed to get analysis from AI. An unknown error occurred.");
     }
 };
 
@@ -178,6 +209,7 @@ export const simulateTestRun = async (testSuite: TestSuite): Promise<Omit<TestRu
     `;
     
     try {
+        const ai = getAiClient();
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: prompt,
@@ -203,14 +235,18 @@ export const simulateTestRun = async (testSuite: TestSuite): Promise<Omit<TestRu
 
     } catch (error) {
         console.error("Error calling Gemini API for test run simulation:", error);
-        throw new Error("Failed to generate test run from AI. The model may have returned an invalid response.");
+        if (error instanceof Error) {
+            throw new Error(`Failed to generate test run. ${error.message}`);
+        }
+        throw new Error("Failed to generate test run from AI. An unknown error occurred.");
     }
 };
 
 export const generateFailureImage = async (prompt: string): Promise<string> => {
     try {
+        const ai = getAiClient();
         const response = await ai.models.generateImages({
-            model: 'imagen-3.0-generate-002',
+            model: 'imagen-4.0-generate-001',
             prompt: `Generate a realistic screenshot of a web application UI that illustrates the following failure scenario. The image should look like a modern, clean web page. Do not include any text that says "screenshot". Scene: ${prompt}`,
             config: {
                 numberOfImages: 1,
@@ -227,7 +263,9 @@ export const generateFailureImage = async (prompt: string): Promise<string> => {
         }
     } catch(error) {
         console.error("Error calling Imagen API:", error);
-        // Return a placeholder or throw an error
+        if (error instanceof Error) {
+            throw new Error(`Failed to generate screenshot. ${error.message}`);
+        }
         throw new Error("Failed to generate failure screenshot.");
     }
 };
@@ -246,6 +284,7 @@ export const refactorCode = async (code: string, instruction: string): Promise<s
     `;
 
     try {
+        const ai = getAiClient();
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: prompt,
@@ -260,7 +299,10 @@ export const refactorCode = async (code: string, instruction: string): Promise<s
         return refactoredCode.replace(/^```(?:\w+\n)?/, '').replace(/```$/, '');
     } catch (error) {
         console.error("Error calling Gemini API for code refactoring:", error);
-        throw new Error("Failed to refactor code. The model may have returned an invalid response.");
+        if (error instanceof Error) {
+            throw new Error(`Failed to refactor code. ${error.message}`);
+        }
+        throw new Error("Failed to refactor code. An unknown error occurred.");
     }
 };
 
@@ -304,6 +346,7 @@ export const generateTestSteps = async (goal: string, url: string): Promise<Pick
     `;
     
     try {
+        const ai = getAiClient();
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: prompt,
@@ -324,6 +367,9 @@ export const generateTestSteps = async (goal: string, url: string): Promise<Pick
 
     } catch(error) {
         console.error("Error calling Gemini API for test step generation:", error);
+        if (error instanceof Error) {
+            throw new Error(`Failed to generate test steps. ${error.message}`);
+        }
         throw new Error("Failed to generate test steps from AI.");
     }
 };
@@ -351,6 +397,7 @@ export const generateRegex = async (description: string): Promise<{ regex: strin
     `;
 
     try {
+        const ai = getAiClient();
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: prompt,
@@ -363,6 +410,9 @@ export const generateRegex = async (description: string): Promise<{ regex: strin
         return JSON.parse(jsonText);
     } catch (error) {
         console.error("Error calling Gemini API for regex generation:", error);
+        if (error instanceof Error) {
+            throw new Error(`Failed to generate regex. ${error.message}`);
+        }
         throw new Error("Failed to generate regex from AI.");
     }
 };
@@ -380,6 +430,7 @@ export const generateUIComponent = async (description: string): Promise<string> 
     `;
 
     try {
+        const ai = getAiClient();
         const response = await ai.models.generateContent({
             model: "gemini-2.5-flash",
             contents: prompt,
@@ -393,6 +444,9 @@ export const generateUIComponent = async (description: string): Promise<string> 
         return componentCode.replace(/^```(?:\w+\n)?/, '').replace(/```$/, '');
     } catch (error) {
         console.error("Error calling Gemini API for UI component generation:", error);
+        if (error instanceof Error) {
+            throw new Error(`Failed to generate component. ${error.message}`);
+        }
         throw new Error("Failed to generate component from AI.");
     }
 };

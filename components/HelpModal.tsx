@@ -29,7 +29,7 @@ const HowItWorksContent: React.FC = () => (
                 <li>You can also build a test case manually, step-by-step, in the Test Editor.</li>
                 <li>This user-defined test plan is sent to the Gemini API for simulation.</li>
                 <li>The AI simulates the execution of each step, determining a <code className="bg-dark-bg text-status-pass px-1 rounded-sm">PASS</code>/<code className="bg-dark-bg text-status-fail px-1 rounded-sm">FAIL</code> status and providing a reason.</li>
-                <li>For failed steps, it generates a descriptive prompt for an image, which is then used with the <code className="bg-dark-bg text-brand-secondary px-1 rounded-sm">imagen-3.0-generate-002</code> model to create a visual representation of the failure.</li>
+                <li>For failed steps, it generates a descriptive prompt for an image, which is then used with the <code className="bg-dark-bg text-brand-secondary px-1 rounded-sm">imagen-4.0-generate-001</code> model to create a visual representation of the failure.</li>
             </ul>
         </div>
         
