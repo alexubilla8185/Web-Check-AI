@@ -3,39 +3,24 @@ import { GoogleGenAI, Type } from "@google/genai";
 import type { QAResults, TestRunResult, TestSuite, TestStep } from '../types';
 import { Status, TestAction } from '../types';
 
-const API_KEY_STORAGE_KEY = 'web-check-ai-gemini-api-key';
 let ai: GoogleGenAI | null = null;
 
 // Function to get the initialized AI client
 function getAiClient(): GoogleGenAI {
-  const apiKey = localStorage.getItem(API_KEY_STORAGE_KEY);
-  if (!apiKey) {
-    throw new Error('Google Gemini API key not found. Please set your key using the key icon in the header.');
-  }
-  
-  // Initialize if it doesn't exist or if the key was updated.
+  // Initialize on first use, and check for the key.
+  // The API key MUST be provided via the process.env.API_KEY environment variable.
   if (!ai) {
+    const apiKey = process.env.API_KEY;
+    if (!apiKey) {
+      throw new Error('Google Gemini API key not found. Please configure the API_KEY environment variable.');
+    }
     ai = new GoogleGenAI({ apiKey });
   }
   return ai;
 }
 
-// --- API Key Management ---
-export const saveApiKey = (key: string) => {
-  localStorage.setItem(API_KEY_STORAGE_KEY, key);
-  // Reset the client so it's re-initialized with the new key on the next API call
-  ai = null; 
-};
-
-export const getApiKey = (): string | null => {
-  return localStorage.getItem(API_KEY_STORAGE_KEY);
-}
-
-export const clearApiKey = () => {
-  localStorage.removeItem(API_KEY_STORAGE_KEY);
-  ai = null;
-}
-
+// API Key Management functions have been removed to adhere to security best practices.
+// The API key must be managed as an environment variable.
 
 const checkItemSchema = {
     type: Type.OBJECT,
